@@ -1,0 +1,97 @@
+GTMv2
+name: Urcity
+description: Urban combat.
+budget: 1000
+waves: 3
+bg: #4a4a4a
+ruins 256 64 128 64
+ruins 256 128 128 64
+ruins 256 256 192 64
+ruins 256 576 256 64
+ruins 256 640 256 64
+ruins 256 704 256 64
+ruins 512 256 64 192
+ruins 576 256 64 192
+ruins 704 256 64 128
+ruins 704 384 64 64
+ruins 576 576 64 192
+ruins 640 576 64 192
+ruins 704 576 64 192
+ruins 832 576 64 192
+ruins 896 576 64 128
+ruins 896 704 128 64
+ruins 960 576 64 128
+ruins 256 384 128 64
+ruins 256 320 128 64
+ruins 384 320 64 128
+ruins 512 64 128 64
+ruins 512 128 128 64
+ruins 384 64 64 128
+ruins 704 64 64 128
+ruins 768 64 64 128
+ruins 768 256 128 64
+ruins 768 384 128 64
+ruins 832 320 64 64
+filled 768 320 64 64
+spawn 448 320 tank
+spawn 960 320 tank
+spawn 512 768 sniper
+spawn 832 512 infantry
+spawn 832 448 infantry
+spawn 640 0 infantry
+spawn 576 0 infantry
+spawn 512 0 infantry
+spawn 1024 448 anti-tank
+spawn 1024 128 anti-tank
+tree 512 576
+tree 512 704
+tree 768 576
+tree 640 384
+tree 768 192
+tree 448 64
+tree 320 192
+tree 1024 768
+tree 1024 704
+tree 1088 704
+tree 1088 640
+tree 1088 576
+tree 1088 512
+tree 1088 768
+tree 1024 832
+tree 960 832
+tree 896 832
+tree 960 768
+tree 896 768
+tree 1088 832
+tree 1152 832
+tree 1088 128
+tree 1088 64
+tree 1088 0
+tree 1024 0
+tree 960 0
+tree 896 0
+tree 832 0
+tree 1088 192
+tree 1024 64
+tree 960 64
+tree 1088 256
+tree 832 768
+tree 0 704
+tree 64 768
+tree 128 768
+tree 192 768
+tree 256 768
+tree 256 832
+tree 192 832
+tree 128 832
+tree 64 832
+tree 0 832
+tree 0 768
+tree 0 640
+tree 64 704
+tree 128 704
+tree 0 576
+tree 192 640
+tree 64 512
+tree 64 576
+tree 64 640

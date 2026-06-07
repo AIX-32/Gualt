@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gault, Tactical Engine</title>
+  <meta name="description" content="Gault is a simple tactical combat game with a campaign, map builder, and custom level uploads.">
+  <meta property="og:title" content="Gault, Tactical Engine">
+  <meta property="og:description" content="Build maps, deploy units, and fight through the campaign or custom levels in Gault.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Gault, Tactical Engine">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-zinc-950 text-zinc-100 h-screen flex flex-col overflow-hidden scanlines">
+
+  <div id="tooltip"></div>
+
+  <div id="homescreen-overlay"
+    class="absolute inset-0 z-50 flex flex-col justify-center bg-zinc-950 border-4 border-black p-10 fade-in">
+    <div class="max-w-lg w-full space-y-6">
+      <div>
+        <div class="text-6xl font-black text-blue-400 tracking-tighter uppercase"
+          style="font-family:Rajdhani,sans-serif;letter-spacing:-2px">GAULT</div>
+        <div class="text-xs text-zinc-500 tracking-widest uppercase mt-1">Tactical Assault Engine · v0.3</div>
+      </div>
+      <div class="space-y-2">
+        <button id="btn-menu-play"
+          class="btn w-full bg-blue-950 hover:bg-blue-900 p-4 flex items-center justify-between">
+          <span class="text-lg font-black text-blue-300" style="font-family:Rajdhani,sans-serif">START</span>
+          <span class="text-xs text-zinc-500">Try the campaign.</span>
+        </button>
+        <button id="btn-menu-builder"
+          class="btn w-full bg-zinc-900 hover:bg-zinc-800 p-4 flex items-center justify-between">
+          <span class="text-lg font-black text-white" style="font-family:Rajdhani,sans-serif">MAP BUILDER</span>
+          <span class="text-xs text-zinc-500">Design Custom games.</span>
+        </button>
+        <button id="btn-menu-custom-levels"
+          class="btn w-full bg-zinc-900 hover:bg-zinc-800 p-4 flex items-center justify-between">
+          <span class="text-lg font-black text-white" style="font-family:Rajdhani,sans-serif">UPLOAD LEVELS</span>
+          <span class="text-xs text-zinc-500">Custom levels library</span>
+        </button>
+      </div>
+      <div class="border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-500 space-y-1">
+        <div class="text-zinc-400 font-bold uppercase tracking-wider mb-1">About</div>
+        <div class="text-zinc-500">
+          Gault is a very simple combat game built in pure html, css, js.
+        </div>
+              <div class="text-zinc-500">
+          <a class="text-white" href="https://aix-32.github.io/Xyper/">By AIX/Zi</a>
+          <a class="text-white" href="https://discord.gg/74c9RBYD4R">Discord</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="level-selection-overlay"
+    class="hidden absolute inset-0 z-50 flex flex-col bg-zinc-950 p-10 border-4 border-black fade-in overflow-y-auto">
+    <div class="max-w-xl mx-auto w-full space-y-6">
+      <div class="flex items-end justify-between border-b-2 border-zinc-800 pb-3">
+        <div>
+          <h2 class="text-4xl font-black text-blue-400 tracking-wider" style="font-family:Rajdhani,sans-serif">TACTICAL
+            CAMPAIGN</h2>
+          <div class="text-xs text-zinc-500 mt-1 uppercase">Select Sector of Engagement</div>
+        </div>
+        <button id="btn-level-back" class="btn bg-zinc-800 text-zinc-300 px-4 py-2 text-xs font-bold">← BACK</button>
+      </div>
+
+      <div class="space-y-3" id="level-list-container">
+      </div>
+    </div>
+  </div>
+
+  <div id="custom-levels-overlay"
+    class="hidden absolute inset-0 z-50 flex flex-col bg-zinc-950 p-10 border-4 border-black fade-in overflow-y-auto">
+    <div class="max-w-xl mx-auto w-full space-y-6">
+      <div class="flex items-end justify-between border-b-2 border-zinc-800 pb-3">
+        <div>
+          <h2 class="text-4xl font-black text-green-400 tracking-wider" style="font-family:Rajdhani,sans-serif">CUSTOM
+            LEVELS</h2>
+          <div class="text-xs text-zinc-500 mt-1 uppercase">Upload, save, and deploy community maps</div>
+        </div>
+        <button id="btn-custom-levels-back" class="btn bg-zinc-800 text-zinc-300 px-4 py-2 text-xs font-bold">←
+          BACK</button>
+      </div>
+
+      <div class="flex gap-2 flex-wrap">
+        <button id="btn-custom-levels-upload"
+          class="btn bg-green-900 hover:bg-green-800 text-green-200 px-4 py-2 text-xs font-black tracking-wider">UPLOAD
+          .GTM</button>
+        <input type="file" id="custom-level-file-input" accept=".gtm,.GTM" class="hidden">
+      </div>
+
+      <div class="space-y-3" id="custom-level-list-container">
+      </div>
+    </div>
+  </div>
+
+  <div id="deployment-overlay"
+    class="hidden absolute inset-0 z-50 flex flex-col bg-zinc-950 p-10 border-4 border-black fade-in">
+    <div class="max-w-lg mx-auto w-full space-y-5">
+      <div class="flex items-end justify-between">
+        <div>
+          <h2 id="deploy-title" class="text-3xl font-black text-blue-400" style="font-family:Rajdhani,sans-serif">DEPLOY
+            FORCES</h2>
+          <div class="text-xs text-zinc-500 mt-0.5">Budget: <span id="deploy-budget" class="text-amber-400">1000</span>c
+            — Remaining: <span id="deploy-remaining" class="text-amber-400 font-bold">1000</span>c</div>
+        </div>
+        <div class="text-xs text-zinc-500" id="deploy-total-units">0 units</div>
+      </div>
+
+      <div class="space-y-1" id="deploy-unit-list">
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="infantry" data-cost="100">
+          <div class="flex items-center space-x-3">
+            <svg width="20" height="20" viewBox="0 0 20 20" class="shrink-0">
+              <circle cx="10" cy="10" r="6" fill="#3b82f6" stroke="#000" stroke-width="2"/>
+              <line x1="10" y1="10" x2="18" y2="6" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Infantry <span class="text-zinc-500 font-normal">· 100c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 50 · Dmg 10 · Fast</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="tank" data-cost="250">
+          <div class="flex items-center space-x-3">
+            <svg width="32" height="20" viewBox="0 0 32 20" class="shrink-0">
+              <rect x="2" y="2" width="28" height="3" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <rect x="2" y="15" width="28" height="3" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <rect x="4" y="4" width="24" height="12" rx="1" fill="#3b82f6" stroke="#000" stroke-width="1.5"/>
+              <circle cx="12" cy="10" r="5" fill="#3b82f6" stroke="#000" stroke-width="1.5"/>
+              <rect x="12" y="7" width="12" height="6" rx="1" fill="#3b82f6" stroke="#000" stroke-width="1.5"/>
+              <rect x="23" y="8" width="5" height="4" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <circle cx="11" cy="9" r="2" fill="#111" stroke="#000" stroke-width="1"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Tank <span class="text-zinc-500 font-normal">· 250c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 220 · Dmg 45 · Heavy</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="drone" data-cost="75">
+          <div class="flex items-center space-x-3">
+            <svg width="20" height="20" viewBox="0 0 20 20" class="shrink-0">
+              <line x1="3" y1="3" x2="17" y2="17" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="17" y1="3" x2="3" y2="17" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="3" cy="3" r="2" fill="#3f3f46" stroke="#000" stroke-width="1"/>
+              <circle cx="17" cy="3" r="2" fill="#3f3f46" stroke="#000" stroke-width="1"/>
+              <circle cx="3" cy="17" r="2" fill="#3f3f46" stroke="#000" stroke-width="1"/>
+              <circle cx="17" cy="17" r="2" fill="#3f3f46" stroke="#000" stroke-width="1"/>
+              <circle cx="10" cy="10" r="4" fill="#22d3ee" stroke="#000" stroke-width="1.5"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Drone <span class="text-zinc-500 font-normal">· 75c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 35 · Dmg 60 · Kamikaze</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="sniper" data-cost="175">
+          <div class="flex items-center space-x-3">
+            <svg width="24" height="20" viewBox="0 0 24 20" class="shrink-0">
+              <circle cx="10" cy="10" r="6" fill="#8b5cf6" stroke="#000" stroke-width="2"/>
+              <line x1="10" y1="10" x2="21" y2="5" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Sniper <span class="text-zinc-500 font-normal">· 175c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 40 · Dmg 80 · Long range</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="apc" data-cost="200">
+          <div class="flex items-center space-x-3">
+            <svg width="28" height="20" viewBox="0 0 28 20" class="shrink-0">
+              <rect x="2" y="2" width="24" height="16" rx="2" fill="#15803d" stroke="#000" stroke-width="2"/>
+              <rect x="10" y="4" width="8" height="12" rx="1" fill="#fff"/>
+              <rect x="13" y="4" width="2" height="12" fill="#15803d"/>
+              <rect x="10" y="9" width="8" height="2" fill="#15803d"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">APC <span class="text-zinc-500 font-normal">· 200c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 140 · Dmg 15 · Heals nearby allies</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="anti-tank" data-cost="350">
+          <div class="flex items-center space-x-3">
+            <svg width="32" height="20" viewBox="0 0 32 20" class="shrink-0">
+              <rect x="1" y="2" width="30" height="3" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <rect x="1" y="15" width="30" height="3" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <rect x="2" y="4" width="28" height="11" rx="1" fill="#a21caf" stroke="#000" stroke-width="1.5"/>
+              <polygon points="22,4 30,5 30,15 22,15" fill="#27272a" stroke="#000" stroke-width="1"/>
+              <rect x="20" y="6" width="10" height="8" rx="1" fill="#a21caf" stroke="#000" stroke-width="1.5"/>
+              <rect x="29" y="7" width="3" height="6" rx="1" fill="#111" stroke="#000" stroke-width="1"/>
+              <circle cx="12" cy="10" r="4" fill="#a21caf" stroke="#000" stroke-width="1.5"/>
+              <circle cx="11" cy="9" r="1.5" fill="#111" stroke="#000" stroke-width="1"/>
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Anti-Tank <span class="text-zinc-500 font-normal">· 350c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 80 · ATGM · Slow</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3 pt-1">
+        <button id="btn-deploy-back" class="btn flex-1 bg-zinc-800 text-zinc-300 p-3 text-sm font-bold">← Back</button>
+        <button id="btn-deploy-launch"
+          class="btn flex-1 bg-blue-900 hover:bg-blue-800 text-blue-200 p-3 text-sm font-black tracking-wider">LAUNCH
+          MISSION ▶</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <header class="bg-zinc-900 border-b-4 border-black px-3 py-1.5 flex items-center justify-between z-10 shrink-0 gap-3">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="text-sm font-black text-blue-400"
+        style="font-family:Rajdhani,sans-serif;letter-spacing:1px">GAULT</span>
+      <span id="active-mode-badge"
+        class="bg-blue-900/60 border border-blue-700 text-[9px] text-blue-300 px-1.5 py-0.5 tracking-widest uppercase">SIMULATION</span>
+    </div>
+
+    <div id="game-metrics" class="flex items-center gap-3 text-[10px] text-zinc-400 shrink-0">
+      <span>BLUE:<span id="blue-count" class="text-blue-400 font-bold ml-1">0</span></span>
+      <span>RED:<span id="red-count" class="text-red-400 font-bold ml-1">0</span></span>
+      <span>CR:<span id="credits-count" class="text-amber-400 font-bold ml-1">500</span></span>
+      <div class="flex items-center gap-1">
+        <span class="text-zinc-600">THREAT</span>
+        <div class="w-16 h-2 bg-zinc-800 border border-zinc-700 overflow-hidden">
+          <div id="threat-bar" class="h-full bg-red-500" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div id="builder-metrics" class="hidden text-[10px] text-amber-500 font-bold shrink-0">BUILDER MODE</div>
+  </header>
+
+  
+  <div class="flex flex-1 min-h-0">
+    
+    <aside class="w-56 shrink-0 bg-zinc-900 border-r-4 border-black flex flex-col select-none"
+      style="position:relative;z-index:3">
+
+      
+      <div id="panel-game" class="hidden flex-1 flex flex-col min-h-0">
+        <div class="flex-1 overflow-y-auto p-2 space-y-2">
+          
+          <div class="border border-blue-900/50 bg-blue-950/30 p-2">
+            <div class="text-[9px] text-blue-400 uppercase tracking-wider font-bold">Selected</div>
+            <div id="selection-status" class="text-sm font-black text-blue-300 mt-0.5">NONE</div>
+            <div id="selection-details" class="text-[9px] text-zinc-500 mt-0.5">Drag to select blue units</div>
+          </div>
+
+          
+          <div>
+            <div class="text-[9px] text-zinc-400 uppercase tracking-wider font-bold mb-1 border-b border-zinc-800 pb-1">Reinforce</div>
+            <div class="grid grid-cols-2 gap-0.5 mt-1">
+              <button id="btn-spawn-infantry" class="panel-btn bg-blue-950 hover:bg-blue-900"
+                data-tip="Infantry: 100c · Fast assault unit">
+                <span>Infantry</span><span class="text-amber-400">100c</span>
+              </button>
+              <button id="btn-spawn-tank" class="panel-btn bg-blue-950 hover:bg-blue-900"
+                data-tip="Tank: 250c · Heavy armor, high damage">
+                <span>Tank</span><span class="text-amber-400">250c</span>
+              </button>
+              <button id="btn-spawn-drone" class="panel-btn bg-blue-950 hover:bg-blue-900"
+                data-tip="Drone: 75c · Kamikaze, ignores obstacles">
+                <span>Drone</span><span class="text-amber-400">75c</span>
+              </button>
+              <button id="btn-spawn-anti-tank" class="panel-btn bg-blue-950 hover:bg-blue-900"
+                data-tip="Anti-Tank: 350c · One-shots tanks, poor vs soft targets">
+                <span>Anti-Tank</span><span class="text-amber-400">350c</span>
+              </button>
+              <button id="btn-spawn-sniper" class="panel-btn bg-violet-950 hover:bg-violet-900"
+                data-tip="Sniper: 175c · Very long range, high damage">
+                <span>Sniper</span><span class="text-amber-400">175c</span>
+              </button>
+              <button id="btn-spawn-apc" class="panel-btn bg-green-950 hover:bg-green-900"
+                data-tip="APC: 200c · Heals nearby allies passively">
+                <span>APC</span><span class="text-amber-400">200c</span>
+              </button>
+            </div>
+          </div>
+
+          
+          <div>
+            <div class="text-[9px] text-zinc-400 uppercase tracking-wider font-bold mb-1 border-b border-zinc-800 pb-1">Tactical</div>
+            <div class="grid grid-cols-2 gap-0.5 mt-1">
+              <button id="btn-air-strike" class="panel-btn bg-red-950 hover:bg-red-900"
+                data-tip="Airstrike: 400c · Drag line for bombing corridor">
+                <span>Airstrike</span><span class="text-red-400">400c</span>
+              </button>
+              <button id="btn-lay-mine" class="panel-btn bg-zinc-800 hover:bg-zinc-700"
+                data-tip="Mine: 75c · Click to place; detonates on enemy contact">
+                <span>Mine</span><span class="text-zinc-300">75c</span>
+              </button>
+              <button id="btn-artillery" class="panel-btn bg-red-950 hover:bg-red-900"
+                data-tip="Artillery: 200c · Click to barrage an area">
+                <span>Barrage</span><span class="text-red-400">200c</span>
+              </button>
+              <button id="btn-smoke" class="panel-btn bg-zinc-800 hover:bg-zinc-700"
+                data-tip="Smoke: 50c · Blocks line-of-sight for 6s">
+                <span>Smoke</span><span class="text-zinc-300">50c</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+        <button id="btn-switch-to-builder"
+          class="shrink-0 bg-zinc-800 hover:bg-zinc-700 text-amber-500 border-t-4 border-black p-2 text-[9px] font-bold tracking-wider hidden">📐
+          MAP BUILDER</button>
+      </div>
+
+      
+      <div id="panel-builder" class="hidden flex-1 flex flex-col min-h-0">
+        <div class="flex-1 overflow-y-auto p-2 space-y-2">
+          <div class="border border-zinc-800 bg-zinc-950 p-2">
+            <div class="text-[9px] text-amber-500 font-bold uppercase tracking-wider">Builder</div>
+            <div class="text-[9px] text-zinc-500 flex justify-between mt-0.5">
+              <span>LMB place · RMB erase</span>
+              <span id="builder-obs-count" class="text-amber-400">0</span>
+            </div>
+          </div>
+          <div class="space-y-0.5">
+            <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Brushes</div>
+            <button id="brush-ruins" class="panel-btn bg-zinc-800" style="border-color:#3b82f6">
+              <div class="w-4 h-3 bg-zinc-500 border border-black mr-2 shrink-0"></div>
+              <span class="flex-1 font-bold">Ruins <span id="ruins-size-label"
+                  class="text-zinc-400 font-normal text-[9px]">2×1</span></span>
+              <button id="btn-ruin-size"
+                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-1">S</button>
+              <button id="btn-rotate-ruins"
+                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-0.5">↻</button>
+            </button>
+            <button id="brush-filled" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div class="w-4 h-3 bg-stone-800 border border-black mr-2 shrink-0 flex items-center justify-center text-[6px] text-amber-900/50">▓</div>
+              <span class="font-bold">Filled</span>
+            </button>
+            <button id="brush-bunker" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div class="w-4 h-4 rounded-full bg-zinc-600 border border-black mr-2 shrink-0"></div>
+              <span class="font-bold">Bunker</span>
+            </button>
+            <button id="brush-wall" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div class="w-6 h-6 border border-black mr-2 shrink-0"
+                style="background:repeating-linear-gradient(45deg,#44403c 0,#44403c 3px,#57534e 3px,#57534e 6px)"></div>
+              <span class="font-bold">Camo Block</span>
+            </button>
+            <button id="brush-wreck" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div class="w-5 h-5 rounded-sm bg-stone-800 border border-stone-600 mr-2 shrink-0 flex items-center justify-center text-[8px] text-stone-500 leading-none">⊞</div>
+              <span class="flex-1 font-bold">Dead Tank <span id="wreck-rot-label" class="text-zinc-400 font-normal text-[9px]">→</span></span>
+            </button>
+            <button id="brush-tree" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div
+                class="w-4 h-4 bg-green-900 border border-green-600 flex items-center justify-center text-[8px] text-green-400 mr-2 shrink-0">
+                ♧</div>
+              <span class="font-bold">Tree</span>
+            </button>
+            <button id="brush-eraser" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div
+                class="w-4 h-4 bg-red-950 border border-red-600 flex items-center justify-center text-[8px] text-red-400 font-bold mr-2 shrink-0">
+                ✕</div>
+              <span class="font-bold">Eraser</span>
+            </button>
+          </div>
+          <div class="space-y-0.5 border-t border-zinc-800 pt-1">
+            <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Spawn Points</div>
+            <button id="brush-spawn-inf" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div
+                class="w-4 h-4 rounded-full border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
+                I</div>
+              <span class="font-bold">Infantry Spawn</span>
+            </button>
+            <button id="brush-spawn-tank" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div
+                class="w-4 h-4 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
+                T</div>
+              <span class="font-bold">Tank Spawn</span>
+            </button>
+            <button id="brush-spawn-drone" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <div
+                class="w-4 h-4 rotate-45 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
+                D</div>
+              <span class="font-bold">Drone Spawn</span>
+            </button>
+            <button id="brush-spawn-sniper" class="panel-btn bg-zinc-950 hover:bg-zinc-800 mt-0.5">
+              <div
+                class="w-4 h-4 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0"
+                style="clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)">
+                S</div>
+              <span class="font-bold">Sniper Spawn</span>
+            </button>
+            <button id="brush-spawn-anti-tank" class="panel-btn bg-zinc-950 hover:bg-zinc-800 mt-0.5">
+              <div
+                class="w-4 h-4 border-2 border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
+                AT</div>
+              <span class="font-bold">AT Spawn</span>
+            </button>
+          </div>
+          <div class="space-y-0.5 border-t border-zinc-800 pt-1">
+            <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Background</div>
+            <div class="flex gap-0.5">
+              <button id="bg-grass"
+                class="btn w-8 h-8 border-black text-[7px] font-bold" style="background:#2d5a27;color:#a3e635">G</button>
+              <button id="bg-stone"
+                class="btn w-8 h-8 border-black text-[7px] font-bold" style="background:#4a4a4a;color:#d4d4d8">S</button>
+              <button id="bg-deadgrass"
+                class="btn w-8 h-8 border-black text-[7px] font-bold" style="background:#5c4a3a;color:#d6a87a">D</button>
+              <button id="bg-dark"
+                class="btn w-8 h-8 border-black text-[7px] font-bold" style="background:#18181b;color:#71717a">N</button>
+              <input type="color" id="bg-custom" value="#18181b"
+                class="w-8 h-8 border-2 border-black cursor-pointer" style="padding:1px;background:#18181b">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-0.5 border-t border-zinc-800 pt-1">
+            <button id="btn-builder-undo" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center">↩ Undo</button>
+            <button id="btn-builder-clear" class="panel-btn bg-red-950 hover:bg-red-900 justify-center">✕ Wipe</button>
+            <button id="btn-builder-export" class="panel-btn bg-blue-950 hover:bg-blue-900 justify-center">↓
+              .GTM</button>
+            <button id="btn-builder-import" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center">↑
+              .GTM</button>
+          </div>
+          <input type="file" id="gtm-file-input" accept=".GTM,.gtm" class="hidden">
+          <button id="btn-builder-test"
+            class="panel-btn bg-green-900 hover:bg-green-800 text-green-300 justify-center font-black tracking-wider">▶
+            TEST MAP</button>
+          <button id="btn-builder-back" class="panel-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 justify-center">←
+            Back</button>
+        </div>
+      </div>
+
+      
+      <div class="shrink-0 border-t-4 border-black p-2">
+        <div
+          class="bg-zinc-950 border border-zinc-800 p-2 font-mono text-[9px] text-zinc-400 leading-relaxed max-h-20 overflow-y-auto"
+          id="diagnostic-log">
+          <div>[SYSTEM] Gault initialized.</div>
+        </div>
+      </div>
+    </aside>
+
+    
+    <main class="flex-1 relative bg-zinc-800 select-none min-w-0 vignette" style="cursor:crosshair">
+      <canvas id="game-canvas" class="block w-full h-full"></canvas>
+      <div class="absolute top-0 left-0 right-0 pointer-events-none z-20" style="height:30px;background:linear-gradient(to bottom,#18181b,transparent)"></div>
+      <div class="absolute top-0 left-0 bottom-0 pointer-events-none z-20" style="width:30px;background:linear-gradient(to right,#18181b,transparent)"></div>
+      
+      <div id="game-directive-overlay"
+        class="absolute top-2 right-2 bg-zinc-900/95 border-2 border-zinc-700 p-2 pointer-events-none max-w-56 space-y-1">
+        <div id="directive-title" class="text-[9px] font-bold text-blue-400 tracking-wider uppercase">TACTICAL
+          DIRECTIVES</div>
+        <div id="directive-text" class="text-[9px] text-zinc-400 leading-relaxed">Loading...</div>
+      </div>
+      
+      <div id="target-mode-alert" class="hidden absolute inset-0 z-50 pointer-events-none">
+        <span id="target-mode-text" class="absolute left-1/2 -translate-x-1/2 bottom-12 px-4 py-1.5 text-sm font-black" style="background:#eab308;color:#000">AIRSTRIKE MODE</span>
+      </div>
+      
+      <div id="cmd-menu"
+        class="hidden absolute z-50 rounded-lg overflow-hidden shadow-2xl border border-zinc-700 flex flex-col text-[11px]">
+        <button class="cmd-option px-3 py-2 font-bold text-left flex items-center gap-2 border-b border-zinc-700/50" data-cmd="attack" style="background:#1a0a0a;color:#f87171">
+          <span class="w-1.5 h-1.5 rounded-full inline-block" style="background:#ef4444"></span>
+          <span>Attack</span>
+          <span class="font-normal ml-auto" style="color:#a1a1aa">Hold & fire</span>
+        </button>
+        <button class="cmd-option px-3 py-2 font-bold text-left flex items-center gap-2 border-b border-zinc-700/50" data-cmd="defend" style="background:#0a0f1a;color:#60a5fa">
+          <span class="w-1.5 h-1.5 rounded-full inline-block" style="background:#3b82f6"></span>
+          <span>Defend</span>
+          <span class="font-normal ml-auto" style="color:#a1a1aa">Hold & fire</span>
+        </button>
+        <button class="cmd-option px-3 py-2 font-bold text-left flex items-center gap-2" data-cmd="patrol" style="background:#0a1a0a;color:#4ade80">
+          <span class="w-1.5 h-1.5 rounded-full inline-block" style="background:#22c55e"></span>
+          <span>Patrol</span>
+          <span class="font-normal ml-auto" style="color:#a1a1aa">Wander & engage</span>
+        </button>
+      </div>
+      <div id="wave-hud"
+        class="hidden absolute bottom-2 right-2 bg-zinc-900/90 border border-zinc-700 px-3 py-1.5 text-[10px] text-zinc-400">
+        <span id="level-hud-name" class="text-blue-400 font-bold mr-1">LEVEL</span> · WAVE <span id="wave-num"
+          class="text-white font-bold">1</span>/<span id="wave-max" class="text-white font-bold">3</span> <span
+          id="wave-timer-container">· Next: <span id="wave-timer"
+            class="text-amber-400 font-bold">--</span>s</span><span id="wave-cleanup-msg"
+          class="hidden text-red-400 font-bold"> · ELIMINATE REMAINING HOSTILES</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+
+</html>

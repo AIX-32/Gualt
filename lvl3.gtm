@@ -1,0 +1,67 @@
+GTMv2
+bg: #5c4a3a
+ruins 896 128 256 64
+ruins 832 192 64 256
+ruins 896 448 256 64
+ruins 1152 192 64 256
+ruins 512 704 64 192
+ruins 576 640 192 64
+ruins 768 704 64 192
+ruins 576 896 64 128
+ruins 704 896 64 128
+wall 320 64 64 64
+wall 384 128 64 64
+wall 384 192 64 64
+wall 384 256 64 64
+wall 320 320 64 64
+wall 320 576 64 64
+wall 320 640 64 64
+wall 320 704 64 64
+wall 256 512 64 64
+wall 256 768 64 64
+spawn 1216 896 tank
+spawn 1280 704 tank
+spawn 1088 896 drone
+spawn 960 896 infantry
+spawn 1344 832 infantry
+spawn 1152 768 infantry
+tree 896 0
+tree 832 0
+tree 832 64
+tree 768 64
+tree 704 64
+tree 704 128
+tree 768 128
+tree 832 128
+tree 640 64
+tree 576 64
+tree 576 0
+tree 640 0
+tree 704 0
+tree 768 0
+tree 640 128
+tree 640 192
+tree 576 192
+tree 640 320
+tree 512 960
+tree 512 896
+tree 448 960
+tree 384 960
+tree 384 896
+tree 448 832
+tree 448 768
+tree 384 768
+tree 320 960
+tree 1152 448
+tree 1152 512
+tree 1152 576
+tree 1088 576
+tree 1024 576
+tree 960 576
+tree 1088 512
+tree 1024 512
+tree 1152 640
+tree 1088 640
+tree 1024 640
+tree 1216 576
+tree 1088 704

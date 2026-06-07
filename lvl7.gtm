@@ -1,0 +1,53 @@
+GTMv2
+name: Drone attack
+description: A true modern fight.
+budget: 1000
+waves: 3
+bg: #5c4a3a
+wreck 256 640 64 64
+wreck 896 704 64 64
+wreck 640 320 64 64
+wreck 256 64 64 64
+wall 320 128 64 64
+wall 320 192 64 64
+wall 320 256 64 64
+wall 256 320 64 64
+bunker 64 768 64 64
+filled 320 320 64 64
+spawn 960 384 drone
+spawn 896 256 drone
+spawn 1024 320 drone
+spawn 960 192 drone
+spawn 832 64 drone
+spawn 1024 576 drone
+spawn 832 640 drone
+spawn 1024 448 tank
+spawn 1024 512 anti-tank
+spawn 832 512 drone
+spawn 768 192 drone
+spawn 640 640 drone
+tree 320 768
+tree 768 384
+tree 256 384
+tree 704 64
+tree 640 384
+tree 64 640
+tree 1024 768
+tree 1024 832
+tree 1088 768
+tree 1088 704
+tree 1088 640
+tree 1152 768
+tree 896 832
+tree 960 832
+tree 960 768
+tree 832 832
+tree 960 704
+tree 1088 0
+tree 1024 0
+tree 960 0
+tree 896 0
+tree 1088 64
+tree 1088 128
+tree 1152 128
+tree 960 64
