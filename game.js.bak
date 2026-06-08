@@ -85,7 +85,7 @@
       },
       {
         id: 4,
-        name: "Overpowerd (0.3, old)",
+        name: "Overpowerd",
         file: "lvl4.gtm",
         budget: 900,
         waves: 4,
@@ -94,7 +94,7 @@
       },
       {
         id: 5,
-        name: "Dust (0.3, old)",
+        name: "Dust",
         file: "lvl5.gtm",
         budget: 1300,
         waves: 3,
@@ -103,7 +103,7 @@
       },
       {
         id: 6,
-        name: "Urcity (0.3, old)",
+        name: "Urcity",
         file: "lvl6.gtm",
         budget: 1700,
         waves: 3,
@@ -112,7 +112,7 @@
       },
       {
         id: 7,
-        name: "Drone Attack (0.3, old)",
+        name: "Drone Attack",
         file: "lvl7.gtm",
         budget: 1000,
         waves: 3,
