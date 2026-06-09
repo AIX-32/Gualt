@@ -26,7 +26,7 @@
       <div>
         <div class="text-6xl font-black text-blue-400 tracking-tighter uppercase"
           style="font-family:Rajdhani,sans-serif;letter-spacing:-2px">GAULT</div>
-        <div class="text-xs text-zinc-500 tracking-widest uppercase mt-1">Tactical Assault Engine · v0.6</div>
+        <div class="text-xs text-zinc-500 tracking-widest uppercase mt-1">Tactical Assault Engine · v0.7</div>
       </div>
       <div class="space-y-2">
         <button id="btn-menu-play"
@@ -240,6 +240,27 @@
             <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
           </div>
         </div>
+        <div class="flex items-center justify-between bg-zinc-900 border-2 border-zinc-800 p-2.5 deploy-row"
+          data-type="commander" data-cost="250">
+          <div class="flex items-center space-x-3">
+            <svg width="24" height="20" viewBox="0 0 24 20" class="shrink-0">
+              <circle cx="10" cy="10" r="6" fill="#3b82f6" stroke="#000" stroke-width="2" />
+              <circle cx="10" cy="10" r="3" fill="#111" stroke="#000" stroke-width="1.5" />
+              <line x1="10" y1="7" x2="10" y2="13" stroke="#3b82f6" stroke-width="1.5" />
+              <rect x="6" y="8" width="3" height="4" rx="0.5" fill="#111" stroke="#000" stroke-width="0.8" />
+              <rect x="11" y="8" width="3" height="4" rx="0.5" fill="#111" stroke="#000" stroke-width="0.8" />
+            </svg>
+            <div>
+              <div class="text-sm font-bold">Commander <span class="text-zinc-500 font-normal">· 250c</span></div>
+              <div class="text-[10px] text-zinc-500">HP 25 · Calls strafing runs</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="deploy-minus btn w-7 h-7 bg-red-950 text-red-400 text-base">−</button>
+            <span class="deploy-qty w-6 text-center font-bold">0</span>
+            <button class="deploy-plus btn w-7 h-7 bg-green-950 text-green-400 text-base">+</button>
+          </div>
+        </div>
       </div>
 
       <div class="flex space-x-3 pt-1">
@@ -330,6 +351,10 @@
                 data-tip="APC: 200c · Heals nearby allies passively">
                 <span>APC</span><span class="text-amber-400">200c</span>
               </button>
+              <button id="btn-spawn-commander" class="panel-btn bg-blue-950 hover:bg-blue-900"
+                data-tip="Commander: 250c · Calls in strafing runs">
+                <span>Commander</span><span class="text-amber-400">250c</span>
+              </button>
             </div>
           </div>
 
@@ -366,157 +391,183 @@
 
       <div id="panel-builder" class="hidden flex-1 flex flex-col min-h-0">
         <div class="flex-1 overflow-y-auto p-2 space-y-2">
-          <div class="border border-zinc-800 bg-zinc-950 p-2">
-            <div class="text-[9px] text-amber-500 font-bold uppercase tracking-wider">Builder</div>
-            <div class="text-[9px] text-zinc-500 flex justify-between mt-0.5">
-              <span>LMB place · RMB erase</span>
-              <span id="builder-obs-count" class="text-amber-400">0</span>
+          <div class="border border-zinc-800 bg-zinc-950 p-2 flex items-center justify-between">
+            <div>
+              <div class="text-[9px] text-amber-500 font-bold uppercase tracking-wider">Builder</div>
+              <div class="text-[9px] text-zinc-500">LMB place · RMB erase</div>
             </div>
+            <span id="builder-obs-count" class="text-amber-400 text-[11px] font-bold">0</span>
           </div>
+
+          <!-- Brushes -->
           <div class="space-y-0.5">
             <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Brushes</div>
             <button id="brush-ruins" class="panel-btn bg-zinc-800" style="border-color:#3b82f6">
-              <div class="w-4 h-3 bg-zinc-500 border border-black mr-2 shrink-0"></div>
-              <span class="flex-1 font-bold">Ruins <span id="ruins-size-label"
-                  class="text-zinc-400 font-normal text-[9px]">2×1</span></span>
-              <button id="btn-ruin-size"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-1">S</button>
-              <button id="btn-rotate-ruins"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-0.5">↻</button>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-zinc-500 border border-black shrink-0"></span>
+                <span class="font-bold">Con Blocks</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span id="ruins-size-label" class="text-zinc-400 font-normal">2×1</span>
+                <input type="color" id="conblock-color" value="#3f3f46" class="builder-sub-btn" style="padding:1px;width:22px;height:22px;cursor:pointer" title="Con Block Color">
+                <span id="btn-ruin-size" class="builder-sub-btn">S</span>
+                <span id="btn-rotate-ruins" class="builder-sub-btn">↻</span>
+              </span>
             </button>
             <button id="brush-filled" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-3 bg-stone-800 border border-black mr-2 shrink-0 flex items-center justify-center text-[6px] text-amber-900/50">
-                ▓</div>
-              <span class="font-bold">Filled</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-stone-800 border border-black shrink-0 flex items-center justify-center text-[6px] text-amber-900/50">▓</span>
+                <span class="font-bold">Filled</span>
+              </span>
             </button>
             <button id="brush-bunker" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div class="w-4 h-4 rounded-full bg-zinc-600 border border-black mr-2 shrink-0"></div>
-              <span class="font-bold">Bunker</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full bg-zinc-600 border border-black shrink-0"></span>
+                <span class="font-bold">Bunker</span>
+              </span>
             </button>
             <button id="brush-wall" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div class="w-6 h-6 border border-black mr-2 shrink-0"
-                style="background:repeating-linear-gradient(45deg,#44403c 0,#44403c 3px,#57534e 3px,#57534e 6px)"></div>
-              <span class="font-bold">Camo Block</span>
+              <span class="flex items-center gap-2">
+                <span class="w-5 h-4 border border-black shrink-0" style="background:repeating-linear-gradient(45deg,#44403c 0,#44403c 3px,#57534e 3px,#57534e 6px)"></span>
+                <span class="font-bold">Camo Block</span>
+              </span>
             </button>
             <button id="brush-wreck" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-5 h-5 rounded-sm bg-stone-800 border border-stone-600 mr-2 shrink-0 flex items-center justify-center text-[8px] text-stone-500 leading-none">
-                ⊞</div>
-              <span class="flex-1 font-bold">Dead Tank <span id="wreck-rot-label"
-                  class="text-zinc-400 font-normal text-[9px]">→</span></span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-sm bg-stone-800 border border-stone-600 shrink-0 flex items-center justify-center text-[8px] text-stone-500 leading-none">⊞</span>
+                <span class="font-bold">Dead Tank</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span id="wreck-rot-label" class="text-zinc-400 font-normal">→</span>
+              </span>
             </button>
             <button id="brush-tree" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-4 bg-green-900 border border-green-600 flex items-center justify-center text-[8px] text-green-400 mr-2 shrink-0">
-                ♧</div>
-              <span class="font-bold">Tree</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-green-900 border border-green-600 shrink-0 flex items-center justify-center text-[8px] text-green-400">♧</span>
+                <span class="font-bold">Tree</span>
+              </span>
             </button>
             <button id="brush-roof" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div class="w-4 h-4 bg-amber-800 border border-amber-600 mr-2 shrink-0"
-                style="background:repeating-linear-gradient(90deg,#78350f 0,#78350f 2px,#92400e 2px,#92400e 4px)"></div>
-              <span class="flex-1 font-bold">Roof <span id="roof-size-label"
-                  class="text-zinc-400 font-normal text-[9px]">1×1</span></span>
-              <button id="btn-roof-size"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-1">S</button>
-              <button id="btn-rotate-roof"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-0.5">↻</button>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 shrink-0 border border-black" style="background:repeating-linear-gradient(90deg,#78350f 0,#78350f 2px,#92400e 2px,#92400e 4px)"></span>
+                <span class="font-bold">Roof</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span id="roof-size-label" class="text-zinc-400 font-normal">1×1</span>
+                <span id="btn-roof-size" class="builder-sub-btn">S</span>
+                <span id="btn-rotate-roof" class="builder-sub-btn">↻</span>
+              </span>
             </button>
             <button id="brush-road" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div class="w-4 h-4 bg-zinc-800 border border-zinc-600 mr-2 shrink-0 flex items-center justify-center">
-                <div class="w-3 h-[2px] bg-yellow-500"></div>
-              </div>
-              <span class="flex-1 font-bold">Road <span id="road-size-label"
-                  class="text-zinc-400 font-normal text-[9px]">1×1</span></span>
-              <button id="btn-road-size"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-1">S</button>
-              <button id="btn-rotate-road"
-                class="w-6 h-6 bg-zinc-600 border border-black text-[9px] font-bold ml-0.5">↻</button>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-zinc-800 border border-zinc-600 shrink-0 flex items-center justify-center"><span class="w-3 h-[2px] bg-yellow-500"></span></span>
+                <span class="font-bold">Road</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span id="road-size-label" class="text-zinc-400 font-normal">1×1</span>
+                <span id="btn-road-size" class="builder-sub-btn">S</span>
+                <span id="btn-rotate-road" class="builder-sub-btn">↻</span>
+              </span>
+            </button>
+            <button id="brush-beacon" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full bg-amber-500 border-2 border-amber-300 shrink-0 flex items-center justify-center"><span class="w-2 h-2 rounded-full bg-amber-200"></span></span>
+                <span class="font-bold">Beacon</span>
+              </span>
             </button>
             <button id="brush-eraser" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-4 bg-red-950 border border-red-600 flex items-center justify-center text-[8px] text-red-400 font-bold mr-2 shrink-0">
-                ✕</div>
-              <span class="font-bold">Eraser</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-red-950 border border-red-600 shrink-0 flex items-center justify-center text-[8px] text-red-400 font-bold">✕</span>
+                <span class="font-bold">Eraser</span>
+              </span>
             </button>
           </div>
+
+          <!-- Spawn Points -->
           <div class="space-y-0.5 border-t border-zinc-800 pt-1">
             <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Spawn Points</div>
             <button id="brush-spawn-inf" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-4 rounded-full border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
-                I</div>
-              <span class="font-bold">Infantry Spawn</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full border border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold">I</span>
+                <span class="font-bold">Infantry</span>
+              </span>
             </button>
             <button id="brush-spawn-tank" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-4 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
-                T</div>
-              <span class="font-bold">Tank Spawn</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 border border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold">T</span>
+                <span class="font-bold">Tank</span>
+              </span>
             </button>
             <button id="brush-spawn-drone" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
-              <div
-                class="w-4 h-4 rotate-45 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
-                D</div>
-              <span class="font-bold">Drone Spawn</span>
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 rotate-45 border border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold">D</span>
+                <span class="font-bold">Drone</span>
+              </span>
             </button>
-            <button id="brush-spawn-sniper" class="panel-btn bg-zinc-950 hover:bg-zinc-800 mt-0.5">
-              <div
-                class="w-4 h-4 border border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0"
-                style="clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)">
-                S</div>
-              <span class="font-bold">Sniper Spawn</span>
+            <button id="brush-spawn-sniper" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 border border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold" style="clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)">S</span>
+                <span class="font-bold">Sniper</span>
+              </span>
             </button>
-            <button id="brush-spawn-anti-tank" class="panel-btn bg-zinc-950 hover:bg-zinc-800 mt-0.5">
-              <div
-                class="w-4 h-4 border-2 border-red-500 bg-red-950 flex items-center justify-center text-[7px] text-red-400 mr-2 shrink-0">
-                AT</div>
-              <span class="font-bold">AT Spawn</span>
+            <button id="brush-spawn-anti-tank" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 border-2 border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold">AT</span>
+                <span class="font-bold">Anti-Tank</span>
+              </span>
+            </button>
+            <button id="brush-spawn-gunner" class="panel-btn bg-zinc-950 hover:bg-zinc-800">
+              <span class="flex items-center gap-2">
+                <span class="w-4 h-4 border border-red-500 bg-red-950 shrink-0 flex items-center justify-center text-[7px] text-red-400 font-bold">G</span>
+                <span class="font-bold">Gunner</span>
+              </span>
             </button>
           </div>
+
+          <!-- Background -->
           <div class="space-y-0.5 border-t border-zinc-800 pt-1">
             <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Background</div>
-            <div class="flex gap-0.5">
-              <button id="bg-grass" class="btn w-8 h-8 border-black text-[7px] font-bold"
-                style="background:#2d5a27;color:#a3e635">G</button>
-              <button id="bg-stone" class="btn w-8 h-8 border-black text-[7px] font-bold"
-                style="background:#4a4a4a;color:#d4d4d8">S</button>
-              <button id="bg-deadgrass" class="btn w-8 h-8 border-black text-[7px] font-bold"
-                style="background:#5c4a3a;color:#d6a87a">D</button>
-              <button id="bg-dark" class="btn w-8 h-8 border-black text-[7px] font-bold"
-                style="background:#18181b;color:#71717a">N</button>
-              <input type="color" id="bg-custom" value="#18181b" class="w-8 h-8 border-2 border-black cursor-pointer"
-                style="padding:1px;background:#18181b">
+            <div class="flex gap-1">
+              <button id="bg-grass" class="builder-sub-btn flex-1 text-[9px]" style="background:#2d5a27;color:#a3e635">G</button>
+              <button id="bg-stone" class="builder-sub-btn flex-1 text-[9px]" style="background:#4a4a4a;color:#d4d4d8">S</button>
+              <button id="bg-deadgrass" class="builder-sub-btn flex-1 text-[9px]" style="background:#5c4a3a;color:#d6a87a">D</button>
+              <button id="bg-dark" class="builder-sub-btn flex-1 text-[9px]" style="background:#18181b;color:#71717a">N</button>
+              <input type="color" id="bg-custom" value="#18181b"
+                class="builder-sub-btn flex-1" style="padding:2px;background:#18181b;cursor:pointer">
               <button id="btn-toggle-vignette"
-                class="btn w-8 h-8 border-black text-[7px] font-bold bg-zinc-900 text-zinc-400">V</button>
+                class="builder-sub-btn flex-1 text-[9px]" style="background:#27272a;color:#a1a1aa">V</button>
             </div>
           </div>
+
+          <!-- Map Settings -->
           <div class="space-y-0.5 border-t border-zinc-800 pt-1">
-            <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Map Size</div>
+            <div class="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Map Settings</div>
             <div class="flex gap-1 items-center">
-              <span class="text-[9px] text-zinc-500">W:</span>
-              <input type="number" id="map-width" value="3200" step="64" min="640"
-                class="w-16 bg-zinc-800 border border-zinc-700 text-[9px] text-zinc-300 px-1 py-0.5">
-              <span class="text-[9px] text-zinc-500">H:</span>
-              <input type="number" id="map-height" value="2400" step="64" min="480"
-                class="w-16 bg-zinc-800 border border-zinc-700 text-[9px] text-zinc-300 px-1 py-0.5">
-              <button id="btn-resize-map" class="btn bg-zinc-800 text-zinc-300 text-[9px] px-2 py-0.5">Resize</button>
+              <span class="text-[9px] text-zinc-500 w-4">W</span>
+              <input type="number" id="map-width" value="50" step="1" min="10" class="builder-input w-14">
+              <span class="text-[9px] text-zinc-500 w-4">H</span>
+              <input type="number" id="map-height" value="37" step="1" min="8" class="builder-input w-14">
+              <span class="text-[9px] text-zinc-500">blks</span>
+              <button id="btn-resize-map" class="builder-sub-btn text-[9px]" style="padding:0 6px">Resize</button>
+            </div>
+            <div class="flex gap-1 items-center">
+              <span class="text-[9px] text-zinc-500 w-12">Budget</span>
+              <input type="number" id="builder-budget" value="1000" step="50" min="0" class="builder-input flex-1">
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-0.5 border-t border-zinc-800 pt-1">
-            <button id="btn-builder-undo" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center">↩ Undo</button>
-            <button id="btn-builder-clear" class="panel-btn bg-red-950 hover:bg-red-900 justify-center">✕ Wipe</button>
-            <button id="btn-builder-export" class="panel-btn bg-blue-950 hover:bg-blue-900 justify-center">↓
-              .GTM</button>
-            <button id="btn-builder-import" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center">↑
-              .GTM</button>
+
+          <!-- Actions -->
+          <div class="grid grid-cols-2 gap-1 border-t border-zinc-800 pt-1">
+            <button id="btn-builder-undo" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center text-[11px]">↩ Undo</button>
+            <button id="btn-builder-clear" class="panel-btn bg-red-950 hover:bg-red-900 justify-center text-[11px]">✕ Wipe</button>
+            <button id="btn-builder-export" class="panel-btn bg-blue-950 hover:bg-blue-900 justify-center text-[11px]">↓ Export</button>
+            <button id="btn-builder-import" class="panel-btn bg-zinc-800 hover:bg-zinc-700 justify-center text-[11px]">↑ Import</button>
           </div>
           <input type="file" id="gtm-file-input" accept=".GTM,.gtm" class="hidden">
           <button id="btn-builder-test"
-            class="panel-btn bg-green-900 hover:bg-green-800 text-green-300 justify-center font-black tracking-wider">▶
-            TEST MAP</button>
-          <button id="btn-builder-back" class="panel-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 justify-center">←
-            Back</button>
+            class="panel-btn bg-green-900 hover:bg-green-800 text-green-300 justify-center text-[11px] font-black tracking-wider">▶ Test Map</button>
+          <button id="btn-builder-back"
+            class="panel-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 justify-center text-[11px]">← Back</button>
         </div>
       </div>
 

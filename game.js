@@ -52,8 +52,8 @@
     }
 
     const GRID = 64;
-    const UNIT_COSTS = { infantry: 100, tank: 250, drone: 75, sniper: 175, apc: 200, 'anti-tank': 350 };
-    const REINFORCE_COSTS = { infantry: 100, tank: 250, drone: 75, sniper: 175, apc: 200, 'anti-tank': 350 };
+    const UNIT_COSTS = { infantry: 100, tank: 250, drone: 75, sniper: 175, apc: 200, 'anti-tank': 350, commander: 250 };
+    const REINFORCE_COSTS = { infantry: 100, tank: 250, drone: 75, sniper: 175, apc: 200, 'anti-tank': 350, commander: 250 };
 
     const LEVELS = [
       {
@@ -85,12 +85,12 @@
       },
       {
         id: 4,
-        name: "Overpowerd (0.3, old)",
+        name: "Lukcity",
         file: "lvl4.gtm",
-        budget: 900,
-        waves: 4,
-        bg: '#18181b',
-        description: "A unfair fight."
+        budget: 1800,
+        waves: 3,
+        bg: '#5e5c64',
+        description: "Urban combat, retrieve the beacon. Be careful of Stationary gunners."
       },
       {
         id: 5,
@@ -132,6 +132,7 @@
       activeLevelWaves: 3,
       activeLevelFile: '',
       activeLevelData: '',
+      builderBudget: 1000,
       builderTestMapState: null,
       unlockedLevelId: parseInt(localStorage.getItem('gault_campaign_progress') || '1'),
       customLevels: loadCustomLevelsFromStorage(),
@@ -175,6 +176,7 @@
       airstrikeBombCount: 0,
       airstrikePoints: [],
       airstrikeLaserTimer: 0,
+      commanderStrike: null,
 
       // Artillery mode
       artilleryMode: false,
@@ -184,17 +186,19 @@
       smokeMode: false,
 
       // Builder
-      activeBrush: 'ruins',
+      activeBrush: 'conblock',
       ruinSize: 2,
       ruinsOrientation: 'horizontal',
       wreckRotation: 0, // 0/1/2/3 = 0°/90°/180°/270°
       isBuilding: false,
+      isErasing: false,
       builderHoverPos: null,
       builderLastAction: null,
       bgColor: '#18181b',
+      conblockColor: '#3f3f46',
 
       // Deployment
-      armySelection: { infantry: 0, tank: 0, drone: 0, sniper: 0, apc: 0, 'anti-tank': 0 },
+      armySelection: { infantry: 0, tank: 0, drone: 0, sniper: 0, apc: 0, 'anti-tank': 0, commander: 0 },
       deployBudget: 1000,
 
       // FX
@@ -234,7 +238,7 @@
       return null;
     }
 
-    function isWalkableObs(o) { return o.type === 'roof' || o.type === 'filled' || o.type === 'road'; }
+    function isWalkableObs(o) { return o.type === 'roof' || o.type === 'filled' || o.type === 'road' || o.type === 'beacon'; }
 
     function segmentIntersectsRect(ax, ay, bx, by, rx, ry, rw, rh) {
       // Liang-Barsky
@@ -497,6 +501,8 @@
           sniper: { radius: 10, speed: 1.3, maxHp: 40, hp: 40, range: 380, damage: 80, cdMax: 130, weapon: 'sniper' },
           apc: { radius: 16, speed: 1.1, maxHp: 140, hp: 140, range: 180, damage: 15, cdMax: 70, weapon: 'bullet', healRadius: 80, healRate: 60 },
           'anti-tank': { radius: 16, speed: 0.6, maxHp: 80, hp: 80, range: 260, damage: 200, cdMax: 200, weapon: 'shell' },
+          gunner: { radius: 14, speed: 0, maxHp: 100, hp: 100, range: 250, damage: 18, cdMax: 15, weapon: 'bullet' },
+          commander: { radius: 10, speed: 1.4, maxHp: 25, hp: 25, range: 1200, damage: 0, cdMax: 900, weapon: 'commander' },
         };
         Object.assign(this, defs[type]);
       }
@@ -504,7 +510,13 @@
       update() {
         if (this.fireCooldown > 0) this.fireCooldown--;
 
-        // APC passive heal
+        if (this.type === 'gunner') {
+          this._findTarget();
+          this._aimAndShoot();
+          return;
+        }
+
+        // APC passive heal (blue only)
         if (this.type === 'apc' && this.team === 'blue') {
           this.healCooldown--;
           if (this.healCooldown <= 0) {
@@ -820,6 +832,25 @@
       }
 
       shoot() {
+        if (this.type === 'commander') {
+          this.fireCooldown = 900;
+          const target = this.targetUnit;
+          if (!target || target.hp <= 0) return;
+          let otherEnemy = null, minDist = Infinity;
+          for (const u of game.units) {
+            if (u.team === 'red' && u !== target && u.hp > 0) {
+              const dx = u.x - target.x, dy = u.y - target.y;
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d < 250 && d < minDist) { otherEnemy = u; minDist = d; }
+            }
+          }
+          if (otherEnemy) {
+            triggerCommanderStrike(target.x, target.y, otherEnemy.x, otherEnemy.y);
+          } else {
+            triggerCommanderStrike(target.x, target.y, target.x, target.y);
+          }
+          return;
+        }
         let cooldownReduction = 0;
         if (this.team === 'blue' && game.tempoKills > 0) {
           cooldownReduction = Math.min(game.tempoKills * 0.08, 0.3);
@@ -1041,6 +1072,75 @@
           // Turret base
           ctx.fillStyle = col; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        } else if (this.type === 'gunner') {
+          ctx.translate(this.x, this.y);
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetY = 3;
+          ctx.fillStyle = '#111111';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius * 1.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#222222';
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowColor = 'transparent';
+          ctx.rotate(this.turretAngle);
+          ctx.fillStyle = col;
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(-this.radius * 0.2, -this.radius * 0.35, this.radius * 0.25, 0, Math.PI * 2);
+          ctx.arc(-this.radius * 0.2, this.radius * 0.35, this.radius * 0.25, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#111111';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.rect(-this.radius * 0.2, -this.radius * 0.2, this.radius * 0.9, this.radius * 0.4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.rect(0, -this.radius * 0.55, this.radius * 0.4, this.radius * 0.35);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(this.radius * 0.7, 0);
+          ctx.lineTo(this.radius * 2.0, 0);
+          ctx.stroke();
+          ctx.fillStyle = '#111111';
+          ctx.beginPath();
+          ctx.rect(this.radius * 1.7, -this.radius * 0.08, this.radius * 0.3, this.radius * 0.16);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#111111';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(-this.radius * 0.4, 0, this.radius * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else if (this.type === 'commander') {
+          ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = col; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke(); ctx.fill();
+          ctx.beginPath(); ctx.arc(this.x + Math.cos(this.turretAngle) * this.radius * 0.3, this.y + Math.sin(this.turretAngle) * this.radius * 0.3, this.radius * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#111'; ctx.stroke(); ctx.fill();
+          const ba = this.turretAngle;
+          const bx = this.x + Math.cos(ba) * this.radius * 0.35;
+          const by = this.y + Math.sin(ba) * this.radius * 0.35;
+          const perp = ba + Math.PI / 2;
+          ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.moveTo(bx + Math.cos(perp) * 2, by + Math.sin(perp) * 2);
+          ctx.lineTo(bx + Math.cos(ba) * 6, by + Math.sin(ba) * 6);
+          ctx.lineTo(bx - Math.cos(perp) * 2, by - Math.sin(perp) * 2);
+          ctx.stroke();
         } else if (this.type === 'drone') {
           const tDist = this.targetUnit ? Math.sqrt((this.targetUnit.x - this.x) ** 2 + (this.targetUnit.y - this.y) ** 2) : Infinity;
           const armed = tDist < 150;
@@ -1092,13 +1192,13 @@
     // ============================================================
     function initDefaultMap() {
       game.obstacles = [
-        { x: 320, y: 192, w: 128, h: 64, type: 'ruins' },
-        { x: 320, y: 320, w: 64, h: 128, type: 'ruins' },
-        { x: 700, y: 384, w: 192, h: 64, type: 'ruins' },
-        { x: 128, y: 448, w: 128, h: 64, type: 'ruins' },
+        { x: 320, y: 192, w: 128, h: 64, type: 'conblock' },
+        { x: 320, y: 320, w: 64, h: 128, type: 'conblock' },
+        { x: 700, y: 384, w: 192, h: 64, type: 'conblock' },
+        { x: 128, y: 448, w: 128, h: 64, type: 'conblock' },
         { x: 576, y: 128, w: 64, h: 64, type: 'bunker' },
         { x: 450, y: 260, w: 64, h: 64, type: 'wall' },
-        { x: 250, y: 300, w: 64, h: 128, type: 'ruins' },
+        { x: 250, y: 300, w: 64, h: 128, type: 'conblock' },
       ];
     }
     initDefaultMap();
@@ -1496,7 +1596,7 @@
       if (ov) ov.remove();
       game.gameOver = null; game.floatingTexts = []; game.airstrikeMode = false; game.airstrikeDragging = false;
       game.airstrikeLineStart = null; game.airstrikeLineEnd = null; game.mineMode = false; game.smokeMode = false; game.artilleryMode = false;
-      game.builderHoverPos = null;
+      game.commanderStrike = null; game.builderHoverPos = null; game.isBuilding = false; game.isErasing = false;
       document.getElementById('target-mode-alert').classList.add('hidden');
 
       // Hide all overlays
@@ -1522,7 +1622,7 @@
 
       } else if (mode === 'deployment') {
         deploy.classList.remove('hidden');
-        game.armySelection = { infantry: 0, tank: 0, drone: 0, sniper: 0, apc: 0, 'anti-tank': 0 };
+        game.armySelection = { infantry: 0, tank: 0, drone: 0, sniper: 0, apc: 0, 'anti-tank': 0, commander: 0 };
         updateDeployUI(); playSound('click');
 
       } else if (mode === 'simulation') {
@@ -1564,7 +1664,7 @@
               game.credits = 500;
               spawnUnit('blue', 'tank', 140, 290); spawnUnit('blue', 'infantry', 130, 210);
               spawnUnit('blue', 'infantry', 130, 370); spawnUnit('blue', 'drone', 110, 290);
-              spawnUnit('blue', 'sniper', 100, 180); spawnUnit('blue', 'apc', 160, 330);
+              spawnUnit('blue', 'sniper', 100, 180); spawnUnit('blue', 'apc', 160, 330); spawnUnit('blue', 'commander', 100, 440);
               logMessage('[SYSTEM] Default loadout deployed on ' + selectedLevelName + '.');
             }
             // Spawn 1 unit per spawner at start
@@ -1574,6 +1674,12 @@
               if (blues.length > 0) { const dest = blues[Math.floor(Math.random() * blues.length)]; u.targetX = dest.x; u.targetY = dest.y; }
             }
             logMessage(`[ENEMY] ${game.spawners.length} enemy units deployed.`);
+            const hasBeacon = game.obstacles.some(o => o.type === 'beacon');
+            if (hasBeacon) {
+              document.getElementById('game-directive-overlay').classList.remove('hidden');
+              document.getElementById('directive-title').textContent = 'MISSION OBJECTIVE';
+              document.getElementById('directive-text').innerHTML = 'Reach the <b style="color:#fbbf24">beacon</b> with any unit to capture it.<br>Eliminating enemies is optional.';
+            }
             startAmbientDrone();
             updateTeamUiCounts();
           }).catch(err => {
@@ -1683,6 +1789,38 @@
     }
 
     // ============================================================
+    //  COMMANDER STRAFE
+    // ============================================================
+    function triggerCommanderStrike(x1, y1, x2, y2) {
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const nx = len > 0 ? dx / len : 1, ny = len > 0 ? dy / len : 0;
+      const extend = 80;
+      const sx = x1 - nx * extend, sy = y1 - ny * extend;
+      const ex = x2 + nx * extend, ey = y2 + ny * extend;
+      const totalLen = len + extend * 2;
+      const count = Math.max(6, Math.min(16, Math.floor(totalLen / 25)));
+      const points = [];
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        points.push({
+          x: sx + (ex - sx) * t + (Math.random() - 0.5) * 12,
+          y: sy + (ey - sy) * t + (Math.random() - 0.5) * 12,
+        });
+      }
+      game.commanderStrike = { points, idx: 0, timer: 0 };
+      addEffect('a10', {
+        x: sx - nx * 280, y: sy - ny * 280,
+        targetX: ex + nx * 280, targetY: ey + ny * 280,
+        speed: 18, angle: Math.atan2(dy, dx), timer: 200
+      });
+      addEffect('target-marker', { x: x1, y: y1, timer: 15 });
+      addEffect('target-marker', { x: x2, y: y2, timer: 15 });
+      playSound('whistle');
+      logMessage('[COMMANDER] Strafing run called in.');
+    }
+
+    // ============================================================
     //  ARTILLERY BARRAGE
     // ============================================================
     function triggerBarrage(x, y) {
@@ -1760,7 +1898,7 @@
 
       if (game.mode === 'builder') {
         if (e.button === 0) { game.isBuilding = true; handleBuilderAction(pos); }
-        else if (e.button === 2) { eraseBuilderAt(pos); }
+        else if (e.button === 2) { game.isErasing = true; eraseBuilderAt(pos); }
         return;
       }
 
@@ -1791,13 +1929,7 @@
             const sel2 = game.units.filter(u => u.isSelected && u.team === 'blue');
             if (sel2.length) executeCommand(cmd, pos, sel2);
           } else {
-            game._cmdPos = pos;
-            game._cmdUnits = sel;
-            const menu = document.getElementById('cmd-menu');
-            const rect = canvas.getBoundingClientRect();
-            menu.style.left = (e.clientX - rect.left + 8) + 'px';
-            menu.style.top = (e.clientY - rect.top + 8) + 'px';
-            menu.classList.remove('hidden');
+            executeCommand('attack', pos, sel);
           }
         }
       }
@@ -1852,7 +1984,7 @@
       }
       const pos = getMousePos(e);
       if (game.airstrikeDragging) { game.airstrikeLineEnd = pos; return; }
-      if (game.mode === 'builder') { game.builderHoverPos = pos; if (game.isBuilding) handleBuilderAction(pos); }
+      if (game.mode === 'builder') { game.builderHoverPos = pos; if (game.isBuilding) handleBuilderAction(pos); if (game.isErasing) eraseBuilderAt(pos); }
       else { game.builderHoverPos = null; if (game.isSelecting) game.selectionEnd = pos; }
     });
 
@@ -1865,7 +1997,7 @@
         if (game.airstrikeLineStart && game.airstrikeLineEnd) triggerAirStrikeLine(game.airstrikeLineStart, game.airstrikeLineEnd);
         game.airstrikeLineStart = null; game.airstrikeLineEnd = null; return;
       }
-      if (game.mode === 'builder') { game.isBuilding = false; return; }
+      if (game.mode === 'builder') { game.isBuilding = false; game.isErasing = false; return; }
       if (e.button === 0 && game.isSelecting) {
         game.isSelecting = false;
         const x1 = Math.min(game.selectionStart.x, game.selectionEnd.x);
@@ -1899,7 +2031,7 @@
       const k = e.key;
       // Builder shortcuts
       if (game.mode === 'builder') {
-        const map = { '1': 'brush-ruins', '2': 'brush-bunker', '3': 'brush-wall', '4': 'brush-tree', '5': 'brush-eraser', '6': 'brush-spawn-inf', '7': 'brush-spawn-tank', '8': 'brush-spawn-drone', '9': 'brush-spawn-sniper', '0': 'brush-spawn-anti-tank', '-': 'brush-filled', '=': 'brush-wreck', 'u': 'brush-roof', 'o': 'brush-road' };
+        const map = { '1': 'brush-ruins', '2': 'brush-bunker', '3': 'brush-wall', '4': 'brush-tree', '5': 'brush-eraser', '6': 'brush-spawn-inf', '7': 'brush-spawn-tank', '8': 'brush-spawn-drone', '9': 'brush-spawn-sniper', '0': 'brush-spawn-anti-tank', '-': 'brush-filled', '=': 'brush-wreck', 'u': 'brush-roof', 'o': 'brush-road', 'p': 'brush-spawn-gunner' };
         if (map[k]) { document.getElementById(map[k]).click(); e.preventDefault(); return; }
         if (k === 'r' || k === 'R') { document.getElementById('btn-rotate-ruins').click(); e.preventDefault(); return; }
         if (k === 's' || k === 'S') { document.getElementById('btn-ruin-size').click(); e.preventDefault(); return; }
@@ -1970,10 +2102,11 @@
       }
       if (!game.obstacles.find(o => o.x === sn.x && o.y === sn.y)) {
         let obs;
-        if (game.activeBrush === 'ruins' || game.activeBrush === 'filled') {
+        if (game.activeBrush === 'conblock' || game.activeBrush === 'filled') {
           const w = game.ruinsOrientation === 'horizontal' ? G * game.ruinSize : G;
           const h = game.ruinsOrientation === 'horizontal' ? G : G * game.ruinSize;
           obs = { x: sn.x, y: sn.y, w, h, type: game.activeBrush };
+          if (game.activeBrush === 'conblock') obs.color = game.conblockColor;
         } else if (game.activeBrush === 'wreck') {
           obs = { x: sn.x, y: sn.y, w: G, h: G, type: 'wreck', rot: game.wreckRotation };
         } else if (game.activeBrush === 'bunker') {
@@ -1988,6 +2121,8 @@
           const w = game.ruinsOrientation === 'horizontal' ? G * game.ruinSize : G;
           const h = game.ruinsOrientation === 'horizontal' ? G : G * game.ruinSize;
           obs = { x: sn.x, y: sn.y, w, h, type: 'road' };
+        } else if (game.activeBrush === 'beacon') {
+          obs = { x: sn.x, y: sn.y, w: G, h: G, type: 'beacon' };
         }
         if (obs) { game.obstacles.push(obs); game.builderLastAction = { type: 'place', obs: { ...obs } }; playSound('click'); updateBuilderCount(); }
       }
@@ -2026,7 +2161,7 @@
       game.activeLevelKind = 'builder-test';
       game.activeLevelName = 'Builder Test';
       game.activeLevelDescription = 'Your editor map.';
-      game.activeLevelBudget = 1000;
+      game.activeLevelBudget = game.builderBudget;
       game.activeLevelWaves = 3;
       game.activeLevelFile = '';
       game.activeLevelData = '';
@@ -2041,6 +2176,7 @@
     document.getElementById('btn-spawn-sniper').addEventListener('click', () => { if (game.mode === 'simulation') buyUnit('sniper'); });
     document.getElementById('btn-spawn-apc').addEventListener('click', () => { if (game.mode === 'simulation') buyUnit('apc'); });
     document.getElementById('btn-spawn-anti-tank').addEventListener('click', () => { if (game.mode === 'simulation') buyUnit('anti-tank'); });
+    document.getElementById('btn-spawn-commander').addEventListener('click', () => { if (game.mode === 'simulation') buyUnit('commander'); });
 
     document.getElementById('btn-air-strike').addEventListener('click', () => {
       if (game.mode !== 'simulation') return;
@@ -2103,11 +2239,11 @@
     //  BUILDER CONTROLS
     // ============================================================
     const brushMap = {
-      'brush-ruins': 'ruins', 'brush-bunker': 'bunker', 'brush-wall': 'wall',
+      'brush-ruins': 'conblock', 'brush-bunker': 'bunker', 'brush-wall': 'wall',
       'brush-tree': 'tree', 'brush-eraser': 'eraser', 'brush-filled': 'filled', 'brush-wreck': 'wreck',
       'brush-spawn-inf': 'spawn-infantry', 'brush-spawn-tank': 'spawn-tank', 'brush-spawn-drone': 'spawn-drone',
-      'brush-spawn-sniper': 'spawn-sniper', 'brush-spawn-anti-tank': 'spawn-anti-tank',
-      'brush-road': 'road', 'brush-roof': 'roof'
+      'brush-spawn-sniper': 'spawn-sniper', 'brush-spawn-anti-tank': 'spawn-anti-tank', 'brush-spawn-gunner': 'spawn-gunner',
+      'brush-road': 'road', 'brush-roof': 'roof', 'brush-beacon': 'beacon'
     };
     Object.entries(brushMap).forEach(([id, brush]) => {
       document.getElementById(id)?.addEventListener('click', () => {
@@ -2159,13 +2295,13 @@
       if (game.activeBrush === 'wreck') {
         const dirs = ['→', '↓', '←', '↑'];
         document.getElementById('wreck-rot-label').textContent = dirs[game.wreckRotation];
-      } else if (game.activeBrush === 'roof' || game.activeBrush === 'road' || game.activeBrush === 'ruins' || game.activeBrush === 'filled') {
+      } else if (game.activeBrush === 'roof' || game.activeBrush === 'road' || game.activeBrush === 'conblock' || game.activeBrush === 'filled') {
         const w = game.ruinsOrientation === 'horizontal' ? game.ruinSize : 1;
         const h = game.ruinsOrientation === 'horizontal' ? 1 : game.ruinSize;
         const label = `${w}×${h}`;
         if (game.activeBrush === 'roof') document.getElementById('roof-size-label').textContent = label;
         else if (game.activeBrush === 'road') document.getElementById('road-size-label').textContent = label;
-        else document.getElementById('ruins-size-label').textContent = label;
+        else if (game.activeBrush === 'conblock' || game.activeBrush === 'filled') document.getElementById('ruins-size-label').textContent = label;
       }
     }
 
@@ -2198,12 +2334,17 @@
     function updateBgUI() {
       const picker = document.getElementById('bg-custom');
       if (picker) picker.value = game.bgColor || '#18181b';
+      const cp = document.getElementById('conblock-color');
+      if (cp) cp.value = game.conblockColor || '#3f3f46';
     }
     Object.entries(BG_PRESETS).forEach(([id, hex]) => {
       document.getElementById(id).addEventListener('click', () => { setBgColor(hex); playSound('click'); });
     });
     document.getElementById('bg-custom').addEventListener('input', e => {
       game.bgColor = e.target.value;
+    });
+    document.getElementById('conblock-color').addEventListener('input', e => {
+      game.conblockColor = e.target.value;
     });
 
     document.getElementById('btn-toggle-vignette')?.addEventListener('click', () => {
@@ -2219,37 +2360,44 @@
     }
 
     function updateMapSizeUI() {
-      document.getElementById('map-width').value = game.worldWidth;
-      document.getElementById('map-height').value = game.worldHeight;
+      document.getElementById('map-width').value = game.worldWidth / GRID;
+      document.getElementById('map-height').value = game.worldHeight / GRID;
     }
     document.getElementById('btn-resize-map')?.addEventListener('click', () => {
-      const w = parseInt(document.getElementById('map-width').value) || 3200;
-      const h = parseInt(document.getElementById('map-height').value) || 2400;
-      game.worldWidth = Math.max(640, w);
-      game.worldHeight = Math.max(480, h);
+      const w = (parseInt(document.getElementById('map-width').value) || 50) * GRID;
+      const h = (parseInt(document.getElementById('map-height').value) || 37) * GRID;
+      game.worldWidth = Math.max(10 * GRID, w);
+      game.worldHeight = Math.max(8 * GRID, h);
       computeWorldBounds();
-      logMessage(`[BUILDER] Map resized to ${game.worldWidth}×${game.worldHeight}.`);
+      logMessage(`[BUILDER] Map resized to ${game.worldWidth}×${game.worldHeight} (${game.worldWidth/GRID}×${game.worldHeight/GRID} blocks).`);
+    });
+    document.getElementById('builder-budget')?.addEventListener('input', e => {
+      game.builderBudget = parseInt(e.target.value) || 1000;
     });
 
     function exportGTM() {
       const mapName = (prompt('Map name?', 'Untitled Map') || '').trim();
       if (!mapName) return;
       const mapDescription = (prompt('Map description?', 'A custom battlefield.') || '').trim();
-      const exportBudget = 1000;
       const exportWaves = 3;
 
       let d = 'GTMv2\n';
       d += `name: ${mapName}\n`;
       d += `description: ${mapDescription || 'A custom battlefield.'}\n`;
-      d += `budget: ${exportBudget}\n`;
+      d += `budget: ${game.builderBudget}\n`;
       d += `waves: ${exportWaves}\n`;
       d += `bg: ${game.bgColor}\n`;
-      game.obstacles.forEach(o => d += `${o.type} ${o.x} ${o.y} ${o.w} ${o.h}\n`);
+      game.obstacles.forEach(o => {
+        d += `${o.type} ${o.x} ${o.y} ${o.w} ${o.h}`;
+        if (o.color && o.color !== '#3f3f46') d += ` ${o.color}`;
+        d += '\n';
+      });
       game.spawners.forEach(s => d += `spawn ${s.x} ${s.y} ${s.type}\n`);
       game.trees.forEach(t => d += `tree ${t.x} ${t.y}\n`);
       const b = new Blob([d], { type: 'text/plain' });
       const u = URL.createObjectURL(b);
-      const a = document.createElement('a'); a.href = u; a.download = 'map.gtm'; a.click(); URL.revokeObjectURL(u);
+      const safeName = mapName.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'map';
+      const a = document.createElement('a'); a.href = u; a.download = safeName + '.gtm'; a.click(); URL.revokeObjectURL(u);
       logMessage(`[BUILDER] Exported (${game.obstacles.length} obs, ${game.trees.length} trees, ${game.spawners.length} spawners).`);
     }
     function importGTM(txt) {
@@ -2262,9 +2410,16 @@
         if (!p.length || !p[0]) continue;
         const lower = p[0].toLowerCase();
         if (lower === 'bg:' && p[1]) { game.bgColor = p[1]; updateBgUI(); continue; }
+        if (lower === 'budget:' && p[1]) { game.builderBudget = parseInt(p[1]) || 1000; document.getElementById('builder-budget').value = game.builderBudget; continue; }
         if (p[0] === 'spawn' && p.length >= 4) game.spawners.push({ x: +p[1], y: +p[2], type: p[3] });
         else if (p[0] === 'tree' && p.length >= 3) game.trees.push({ x: +p[1], y: +p[2] });
-        else if (p.length >= 5) game.obstacles.push({ type: p[0], x: +p[1], y: +p[2], w: +p[3], h: +p[4] });
+        else if (p.length >= 5) {
+          let type = p[0];
+          if (type === 'ruins') type = 'conblock';
+          const obs = { type, x: +p[1], y: +p[2], w: +p[3], h: +p[4] };
+          if (p[5] && /^#[0-9a-f]{6}$/i.test(p[5])) obs.color = p[5];
+          game.obstacles.push(obs);
+        }
       }
       game.builderLastAction = null; updateBuilderCount();
       logMessage(`[BUILDER] Imported (${game.obstacles.length} obs, ${game.trees.length} trees, ${game.spawners.length} spawners).`);
@@ -2561,6 +2716,28 @@
       }
       if (game.airstrikeLaserTimer > 0) game.airstrikeLaserTimer--;
 
+      // Commander strafing run
+      if (game.commanderStrike && game.commanderStrike.idx < game.commanderStrike.points.length) {
+        game.commanderStrike.timer++;
+        if (game.commanderStrike.timer % 3 === 0) {
+          const pt = game.commanderStrike.points[game.commanderStrike.idx];
+          game.commanderStrike.idx++;
+          game.units.forEach(u => {
+            if (u.team === 'red') {
+              const d = Math.sqrt((u.x - pt.x) ** 2 + (u.y - pt.y) ** 2);
+              if (d < 35) {
+                const dmg = Math.round(35 * (1 - d / 35));
+                u.hp -= dmg;
+                addFloatingText(u.x, u.y - 14, `-${dmg}`, '#ef4444');
+                alertEnemyOnHit(u, { team: 'blue', x: pt.x, y: pt.y });
+              }
+            }
+          });
+          for (let i = 0; i < 3; i++) addEffect('spark', { x: pt.x + (Math.random() - .5) * 6, y: pt.y + (Math.random() - .5) * 6, vx: (Math.random() - .5) * 2, vy: (Math.random() - .5) * 2, timer: 6 });
+          addEffect('muzzle-flash', { x: pt.x, y: pt.y, timer: 4, team: 'blue' });
+        }
+      }
+
       // Mine detonation
       for (let i = game.mines.length - 1; i >= 0; i--) {
         const mine = game.mines[i];
@@ -2587,6 +2764,7 @@
       if (!game.gameOver) {
         const b = game.units.filter(u => u.team === 'blue').length;
         const r = game.units.filter(u => u.team === 'red').length;
+        const beacon = game.obstacles.find(o => o.type === 'beacon');
 
         // Defeat if all blues are dead
         if (b === 0 && game.units.length >= 0 && dead.some(u => u.team === 'blue')) {
@@ -2595,11 +2773,7 @@
           showGameOver('defeat');
         }
 
-        // Victory if no red units remain
-        if (r === 0 && game.units.filter(u => u.team === 'blue').length > 0) {
-          game.gameOver = 'victory';
-          logMessage('<span style="color:#22c55e;font-weight:bold">[VICTORY] Sector secured. All hostiles eliminated.</span>');
-          // Unlock next level if applicable
+        function unlockNextLevel() {
           const level = LEVELS.find(l => l.id === game.currentLevelId);
           if (level && game.currentLevelId < LEVELS.length) {
             const nextId = game.currentLevelId + 1;
@@ -2608,7 +2782,25 @@
               localStorage.setItem('gault_campaign_progress', nextId.toString());
             }
           }
-          showGameOver('victory');
+        }
+
+        if (beacon) {
+          // Capture the beacon mode
+          const onBeacon = game.units.some(u => u.team === 'blue' && u.hp > 0 && u.x >= beacon.x && u.x <= beacon.x + beacon.w && u.y >= beacon.y && u.y <= beacon.y + beacon.h);
+          if (onBeacon && b > 0) {
+            game.gameOver = 'victory';
+            logMessage('<span style="color:#22c55e;font-weight:bold">[VICTORY] Beacon captured! Sector secured.</span>');
+            unlockNextLevel();
+            showGameOver('victory');
+          }
+        } else {
+          // Kill all enemies mode
+          if (r === 0 && game.units.filter(u => u.team === 'blue').length > 0) {
+            game.gameOver = 'victory';
+            logMessage('<span style="color:#22c55e;font-weight:bold">[VICTORY] Sector secured. All hostiles eliminated.</span>');
+            unlockNextLevel();
+            showGameOver('victory');
+          }
         }
       }
     }
@@ -2661,8 +2853,8 @@
       // Obstacles
       game.obstacles.forEach(o => {
         ctx.save(); ctx.strokeStyle = '#000'; ctx.lineWidth = 3.5;
-        if (o.type === 'ruins') {
-          ctx.fillStyle = '#3f3f46';
+        if (o.type === 'conblock' || o.type === 'ruins') {
+          ctx.fillStyle = o.color || '#3f3f46';
           ctx.fillRect(o.x, o.y, o.w, o.h); ctx.strokeRect(o.x, o.y, o.w, o.h);
           ctx.strokeStyle = 'rgba(30,30,30,0.5)'; ctx.lineWidth = 1.5;
           for (let s = 16; s < o.w; s += 22) { ctx.beginPath(); ctx.moveTo(o.x + s, o.y); ctx.lineTo(o.x + s + 12, o.y + o.h); ctx.stroke(); }
@@ -2763,6 +2955,18 @@
           ctx.fillRect(o.x, o.y, o.w, o.h); ctx.strokeRect(o.x, o.y, o.w, o.h);
           ctx.strokeStyle = '#1c1917'; ctx.lineWidth = 1;
           for (let ry = 0; ry < o.h; ry += 10) { ctx.beginPath(); ctx.moveTo(o.x, o.y + ry); ctx.lineTo(o.x + o.w, o.y + ry); ctx.stroke(); }
+        } else if (o.type === 'beacon') {
+          const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+          const t = Date.now() / 1000;
+          const pulse = 0.25 + Math.sin(t * 2.5) * 0.12;
+          ctx.fillStyle = `rgba(251,191,36,${pulse})`;
+          ctx.beginPath(); ctx.arc(cx, cy, o.w / 2 + 6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#374151'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(cx, cy, o.w / 2 - 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath(); ctx.arc(cx, cy, o.w / 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath(); ctx.arc(cx, cy, o.w / 5, 0, Math.PI * 2); ctx.fill();
         }
         ctx.restore();
       });
@@ -2807,7 +3011,7 @@
           ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px Share Tech Mono,monospace';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
-          const lbl = s.type === 'infantry' ? 'INF' : s.type === 'tank' ? 'TNK' : s.type === 'drone' ? 'DRN' : s.type === 'sniper' ? 'SNP' : 'AT';
+          const lbl = s.type === 'infantry' ? 'INF' : s.type === 'tank' ? 'TNK' : s.type === 'drone' ? 'DRN' : s.type === 'sniper' ? 'SNP' : s.type === 'gunner' ? 'GNR' : 'AT';
           ctx.strokeText(lbl, s.x + 32, s.y + 32); ctx.fillText(lbl, s.x + 32, s.y + 32);
           ctx.restore();
         });
@@ -2872,6 +3076,21 @@
           ctx.restore();
         }
 
+        // Commander strafe indicator
+        if (game.commanderStrike && game.commanderStrike.idx < game.commanderStrike.points.length) {
+          const pts = game.commanderStrike.points;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(251,191,36,0.4)'; ctx.lineWidth = 2; ctx.setLineDash([4, 6]);
+          ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.stroke(); ctx.setLineDash([]);
+          const last = pts[Math.min(game.commanderStrike.idx, pts.length - 1)];
+          const pulse = 0.5 + Math.sin(Date.now() * 0.02) * 0.3;
+          ctx.fillStyle = `rgba(251,191,36,${pulse})`;
+          ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+
         // Airstrike laser overlay
         if (game.airstrikeLaserTimer > 0 && game.airstrikePoints?.length > 1) {
           const a = 0.4 + 0.5 * Math.sin(Date.now() * .015);
@@ -2915,7 +3134,7 @@
         ctx.strokeStyle = erase ? '#ef4444' : '#eab308'; ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.fillStyle = erase ? 'rgba(239,68,68,0.1)' : 'rgba(234,179,8,0.1)';
-        if (game.activeBrush === 'ruins' || game.activeBrush === 'filled') {
+        if (game.activeBrush === 'conblock' || game.activeBrush === 'filled' || game.activeBrush === 'roof' || game.activeBrush === 'road') {
           const w = game.ruinsOrientation === 'horizontal' ? GRID * game.ruinSize : GRID;
           const h = game.ruinsOrientation === 'horizontal' ? GRID : GRID * game.ruinSize;
           ctx.fillRect(sn.x, sn.y, w, h); ctx.strokeRect(sn.x, sn.y, w, h);
