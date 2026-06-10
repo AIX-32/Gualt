@@ -94,12 +94,12 @@
       },
       {
         id: 5,
-        name: "Dust (0.3, old)",
+        name: "Campside",
         file: "lvl5.gtm",
-        budget: 1300,
+        budget: 1500,
         waves: 3,
         bg: '#5c4a3a',
-        description: "Watch out for snipers and antitanks!"
+        description: "Get the beacon. the campsite is filled with personnel."
       },
       {
         id: 6,

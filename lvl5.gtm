@@ -1,83 +1,347 @@
 GTMv2
-name: Dust
-description: Watch out for snipers and antitanks!
-budget: 1000
+name: Campside
+description: Get the beacon, the campsite is filled with personnel.
+budget: 1500
 waves: 3
 bg: #5c4a3a
-ruins 768 0 64 192
-ruins 768 640 64 192
-ruins 832 576 128 64
-ruins 832 192 128 64
-ruins 960 0 64 192
-ruins 960 640 64 192
-wall 576 192 64 64
-wall 512 256 64 64
-wall 512 320 64 64
-wall 576 384 64 64
-wall 448 704 64 64
-wall 448 640 64 64
-wall 448 576 64 64
-wall 512 512 64 64
-wall 256 64 64 64
-wall 256 128 64 64
-wall 256 192 64 64
-wall 192 256 64 64
-bunker 128 704 64 64
-filled 896 0 64 192
-filled 832 0 64 192
-filled 896 640 64 192
-filled 832 640 64 192
-spawn 1088 256 tank
-spawn 1088 384 tank
-spawn 1088 512 tank
-spawn 1088 320 anti-tank
-spawn 1088 448 anti-tank
-spawn 384 704 drone
-spawn 384 0 drone
-spawn 960 448 sniper
-spawn 960 320 sniper
-spawn 832 448 infantry
-spawn 832 384 infantry
-spawn 832 320 infantry
-tree 640 768
-tree 704 704
-tree 704 640
-tree 704 576
-tree 704 768
-tree 576 768
-tree 576 704
-tree 640 704
-tree 640 640
-tree 768 576
-tree 576 576
-tree 1024 768
-tree 1024 704
-tree 1088 704
-tree 1088 640
-tree 1088 576
-tree 1088 768
-tree 1024 0
-tree 1024 64
-tree 1088 64
-tree 1088 128
-tree 1088 192
-tree 1088 0
-tree 704 0
-tree 704 64
-tree 640 64
-tree 640 128
-tree 576 0
-tree 576 64
-tree 512 128
-tree 512 0
-tree 640 0
+conblock 576 0 256 64
+conblock 512 64 64 256
+conblock 512 320 64 256
+conblock 512 832 64 256
+conblock 512 1088 64 256
+conblock 576 1344 256 64
+conblock 832 1344 256 64
+conblock 1344 1344 256 64
+conblock 1600 1344 256 64
+conblock 1856 1088 64 256
+conblock 1856 832 64 256
+conblock 1856 576 64 256
+conblock 1856 320 64 256
+conblock 1856 64 64 256
+conblock 1600 0 256 64
+conblock 1344 0 256 64
+conblock 832 0 256 64
+conblock 1088 0 256 64
+filled 640 64 64 256
+filled 704 64 64 256
+filled 768 64 64 256
+filled 896 64 64 256
+filled 960 64 64 256
+filled 1024 64 64 256
+filled 1088 64 64 256
+filled 1152 64 64 256
+filled 1216 64 64 256
+filled 1280 64 64 256
+filled 1344 64 64 256
+filled 1408 64 64 256
+filled 1472 64 64 256
+filled 1536 64 64 256
+filled 1600 64 64 256
+filled 1664 64 64 256
+filled 1728 64 64 256
+filled 1792 64 64 256
+filled 1792 320 64 256
+filled 1728 320 64 256
+filled 1664 320 64 256
+filled 1600 320 64 256
+filled 1536 320 64 256
+filled 1472 320 64 256
+filled 1408 320 64 256
+filled 1344 320 64 256
+filled 1280 320 64 256
+filled 1216 320 64 256
+filled 1152 320 64 256
+filled 1088 320 64 256
+filled 1024 320 64 256
+filled 960 320 64 256
+filled 896 320 64 256
+filled 768 320 64 256
+filled 704 320 64 256
+filled 640 320 64 256
+filled 576 576 64 256
+filled 640 576 64 256
+filled 704 576 64 256
+filled 768 576 64 256
+filled 832 576 64 256
+filled 896 576 64 256
+filled 960 576 64 256
+filled 1408 576 64 256
+filled 1472 576 64 256
+filled 1536 576 64 256
+filled 1600 576 64 256
+filled 1664 576 64 256
+filled 1728 576 64 256
+filled 1792 576 64 256
+filled 1344 832 64 256
+filled 1280 832 64 256
+filled 1216 832 64 256
+filled 1152 832 64 256
+filled 1088 832 64 256
+filled 1024 832 64 256
+filled 960 832 64 256
+filled 896 832 64 256
+filled 1408 832 64 256
+filled 1792 832 64 256
+filled 1664 832 64 256
+filled 1728 832 64 256
+filled 1792 1088 64 256
+filled 1728 1088 64 256
+filled 1664 1088 64 256
+filled 1536 1088 64 256
+filled 1472 1088 64 256
+filled 1280 1088 64 256
+filled 1216 1088 64 256
+filled 1152 1088 64 256
+filled 1088 1088 64 256
+filled 960 1088 64 256
+filled 896 1088 64 256
+filled 768 1088 64 256
+filled 704 1088 64 256
+filled 640 1088 64 256
+filled 1088 1344 256 64
+filled 512 576 64 256
+filled 1088 1280 256 64
+conblock 1024 1088 64 256
+conblock 1344 1088 64 256
+conblock 832 1024 256 64
+conblock 832 832 64 192
+conblock 1536 832 64 256
+filled 1472 832 64 256
+conblock 1344 1024 256 64
+conblock 1600 832 256 64
+conblock 1024 576 64 256
+conblock 1344 576 64 256
+conblock 1088 576 64 64
+conblock 1280 576 64 64
+beacon 1152 704 64 64
+conblock 1088 768 256 64
+roof 1088 704 256 64
+roof 1088 640 256 64
+conblock 832 64 64 256
+conblock 832 320 64 256
+roof 576 64 256 64
+roof 576 128 256 64
+roof 576 192 256 64
+roof 576 256 256 64
+roof 576 320 256 64
+roof 576 384 256 64
+roof 576 960 256 64
+roof 576 1024 256 64
+roof 576 1088 256 64
+roof 576 1152 256 64
+roof 576 1216 256 64
+roof 576 1280 256 64
+roof 832 1088 192 64
+roof 832 1152 192 64
+roof 832 1216 192 64
+roof 832 1280 192 64
+roof 1408 1152 192 64
+roof 1408 1216 192 64
+roof 1408 1280 192 64
+roof 1408 1088 192 64
+roof 1600 896 256 64
+roof 1600 960 256 64
+roof 1600 1024 256 64
+roof 1600 1088 256 64
+roof 1600 1152 256 64
+roof 1600 1216 256 64
+roof 1600 1280 256 64
+conblock 576 448 256 64
+wall 576 512 64 64
+wall 768 512 64 64
+wall 576 832 64 64
+wall 768 832 64 64
+conblock 576 896 256 64
+filled 640 512 128 64
+filled 640 832 128 64
+road 0 704 256 64
+road 256 704 192 64
+road 256 640 192 64
+road 0 640 256 64
+road 1600 2112 64 256
+road 1600 1856 64 256
+road 1600 1600 64 256
+wall 1600 1536 64 64
+filled 1152 576 128 64
+bunker 384 1856 64 64
+spawn 1280 512 gunner
+spawn 1088 512 gunner
+spawn 640 832 gunner
+spawn 704 832 gunner
+spawn 704 512 gunner
+spawn 640 512 gunner
+spawn 896 960 gunner
+spawn 1472 960 gunner
+spawn 960 768 infantry
+spawn 704 704 infantry
+spawn 960 640 infantry
+spawn 768 640 infantry
+spawn 896 704 infantry
+spawn 1600 448 infantry
+spawn 1088 384 infantry
+spawn 1408 448 infantry
+spawn 960 192 infantry
+spawn 1216 192 infantry
+spawn 1536 704 infantry
+spawn 1728 704 infantry
+spawn 1280 896 infantry
+spawn 1152 960 infantry
+spawn 1728 256 sniper
 tree 0 768
-tree 0 704
-tree 0 640
-tree 64 640
-tree 64 704
-tree 64 768
 tree 128 768
-tree 192 768
-tree 256 704
+tree 256 768
+tree 384 768
+tree 384 576
+tree 256 576
+tree 128 576
 tree 0 576
+tree 0 1664
+tree 64 1728
+tree 64 1664
+tree 128 1664
+tree 192 1664
+tree 192 1600
+tree 192 1536
+tree 256 1536
+tree 256 1472
+tree 320 1408
+tree 320 1344
+tree 320 1472
+tree 320 1536
+tree 320 1600
+tree 320 1664
+tree 384 1728
+tree 384 1792
+tree 448 1792
+tree 512 1792
+tree 576 1792
+tree 640 1792
+tree 576 1728
+tree 512 1728
+tree 448 1728
+tree 320 1792
+tree 256 1792
+tree 192 1792
+tree 128 1792
+tree 128 1728
+tree 192 1728
+tree 256 1728
+tree 320 1728
+tree 64 1792
+tree 0 1792
+tree 0 1728
+tree 256 1664
+tree 128 1472
+tree 640 1728
+tree 704 1664
+tree 704 1792
+tree 768 1792
+tree 832 1792
+tree 896 1792
+tree 576 1856
+tree 640 1856
+tree 640 1920
+tree 640 1984
+tree 704 1984
+tree 704 2048
+tree 704 2112
+tree 768 2112
+tree 768 2176
+tree 832 2176
+tree 896 2176
+tree 960 2240
+tree 1024 2240
+tree 1024 2304
+tree 1088 2304
+tree 1152 2304
+tree 448 1856
+tree 384 1920
+tree 320 1920
+tree 256 1984
+tree 192 2048
+tree 128 2048
+tree 128 2112
+tree 64 2112
+tree 0 2176
+tree 64 2176
+tree 192 1984
+tree 256 1920
+tree 256 1856
+tree 320 1856
+tree 128 1984
+tree 64 2048
+tree 0 2048
+tree 0 2112
+tree 64 1984
+tree 64 1920
+tree 128 1920
+tree 128 1856
+tree 192 1856
+tree 192 1920
+tree 448 1920
+tree 448 1984
+tree 384 1984
+tree 384 2048
+tree 384 2112
+tree 320 2112
+tree 320 2176
+tree 256 2240
+tree 192 2240
+tree 192 2176
+tree 192 2112
+tree 256 2112
+tree 256 2048
+tree 320 2048
+tree 320 1984
+tree 512 1984
+tree 512 2048
+tree 576 2048
+tree 576 2112
+tree 640 2112
+tree 640 2176
+tree 640 2240
+tree 576 2240
+tree 576 2304
+tree 512 2304
+tree 448 2304
+tree 384 2304
+tree 320 2304
+tree 256 2304
+tree 256 2176
+tree 448 2112
+tree 512 2112
+tree 512 2176
+tree 576 2176
+tree 640 2304
+tree 768 2304
+tree 832 2304
+tree 832 2240
+tree 768 2240
+tree 704 2304
+tree 192 2304
+tree 128 2304
+tree 128 2240
+tree 64 2240
+tree 128 2176
+tree 384 2176
+tree 448 2240
+tree 512 2240
+tree 448 2176
+tree 64 1856
+tree 0 1856
+tree 0 1920
+tree 512 1920
+tree 576 1984
+tree 704 1856
+tree 1088 2176
+tree 1856 0
+tree 1536 1600
+tree 1664 1600
+tree 1536 1728
+tree 1664 1728
+tree 1536 1856
+tree 1664 1856
+tree 1664 1984
+tree 1536 1984
+tree 1536 2112
+tree 1664 2112
